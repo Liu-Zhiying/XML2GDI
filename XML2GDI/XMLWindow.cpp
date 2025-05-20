@@ -1,6 +1,97 @@
 #include "XMLWindow.h"
 #include "Utils.h"
 #include <algorithm>
+#include <exception>
+
+const unsigned char x64WindowHookShellCode[] = { 0x41, 0x51, 0x41, 0x50, 0x52, 0x51, 0x48, 0xb9, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5a, 0x41, 0x58, 0x41, 0x59, 0x48, 0x83, 0xec, 0x20, 0xff, 0xd0, 0x48, 0x83, 0xc4, 0x20, 0x59, 0xc3 };
+
+const unsigned char x86WindowHookShellCode[] = { 0xb9, 0x00, 0x00, 0x00, 0x00, 0xb8, 0x00, 0x00, 0x00, 0x00, 0xff, 0xe0 };
+
+const unsigned char* GenWindowHook(XmlWindow& _this)
+{
+	SYSTEM_INFO systemInfo = {};
+
+	GetSystemInfo(&systemInfo);
+
+	switch (systemInfo.wProcessorArchitecture)
+	{
+	case PROCESSOR_ARCHITECTURE_AMD64:
+	{
+		unsigned char* shellCode = NULL;
+
+		//Allocate executable memory.
+		shellCode = (unsigned char*)VirtualAlloc(NULL, sizeof(x64WindowHookShellCode), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
+		if (shellCode == NULL)
+			break;
+
+		//Copy hook template.
+		memcpy(shellCode, (void*)x64WindowHookShellCode, sizeof x64WindowHookShellCode);
+
+		//Change pointer.
+		void** pThis = (void**)(shellCode + 0x8);
+		void** pFunc = (void**)(shellCode + 0x12);
+
+		*pThis = &_this;
+        LRESULT (XmlWindow::*_pFunc)(HWND hWnd, UINT32 msgId, WPARAM wParam, LPARAM lParam) = &XmlWindow::XmlWindowProc;
+		*pFunc = *reinterpret_cast<void**>(&_pFunc);
+
+		return shellCode;
+	}
+	case PROCESSOR_ARCHITECTURE_INTEL:
+	{
+		//Like last case.
+		unsigned char* shellCode = NULL;
+
+		shellCode = (unsigned char*)VirtualAlloc(NULL, sizeof(x86WindowHookShellCode), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
+		if (shellCode == NULL)
+			break;
+
+		memcpy(shellCode, (void*)x86WindowHookShellCode, sizeof x86WindowHookShellCode);
+
+		void** pThis = (void**)(shellCode + 0x1);
+		void** pFunc = (void**)(shellCode + 0x6);
+
+		*pThis = &_this;
+		LRESULT(XmlWindow:: * _pFunc)(HWND hWnd, UINT32 msgId, WPARAM wParam, LPARAM lParam) = &XmlWindow::XmlWindowProc;
+		*pFunc = *reinterpret_cast<void**>(&_pFunc);
+
+		return shellCode;
+	}
+	default:
+		throw std::exception("Architecture not supported.");
+		break;
+	}
+	return NULL;
+}
+
+//Set new this pointer in hook.
+void ChangeThisPtrForWindowHook(const unsigned char* pWindowHook, XmlWindow& _this)
+{
+	SYSTEM_INFO systemInfo = {};
+
+	GetSystemInfo(&systemInfo);
+
+	switch (systemInfo.wProcessorArchitecture)
+	{
+	case PROCESSOR_ARCHITECTURE_AMD64:
+	{
+		void** pThis = (void**)(pWindowHook + 0x8);
+		*pThis = &_this;
+		break;
+	}
+	case PROCESSOR_ARCHITECTURE_INTEL:
+	{
+		void** pThis = (void**)(pWindowHook + 0x1);
+		*pThis = &_this;
+		break;
+	}
+	default:
+		throw std::exception("Architecture not supported.");
+		break;
+	}
+}
 
 std::string GetTextAttribute(HWND hWnd)
 {
@@ -131,7 +222,6 @@ std::string GetStyleAttribute(HWND hWnd)
 
 	for (size_t idx = 0; idx < ARRAY_SIZE(styleInfos) && styleCode; ++idx)
 	{
-		
 		DWORD styleTestCode = styleCode & styleInfos[idx].value;
 		if (styleTestCode == styleInfos[idx].value)
 		{
@@ -246,6 +336,35 @@ struct InternalAttributeInfo
 	{ "text", GetTextAttribute, SetTextAttribute }
 };
 
+LRESULT XmlWindow::XmlWindowProc(HWND hWnd, UINT32 msgId, WPARAM wParam, LPARAM lParam)
+{
+	//Reserved, just call old window process funnction. 
+	return pOldWndProc(hWnd, msgId, wParam, lParam);
+}
+
+void XmlWindow::ResetObjectt()
+{
+	hWnd = NULL;
+	pParent = NULL;
+	pWindowHookShellCode = NULL;
+	pOldWndProc = NULL;
+}
+
+XmlWindow::XmlWindow(HWND _hWnd, XmlWindow* _pParent) : hWnd(_hWnd), pParent(_pParent)
+{
+	//Generate window process function hook.
+	pWindowHookShellCode = GenWindowHook(*this);
+
+	if (pWindowHookShellCode == NULL)
+		throw std::exception("Can not generate window hook.");
+
+	//Set window processs function to the hook and get old function.
+	pOldWndProc = (LRESULT(CALLBACK *)(HWND, UINT32, WPARAM, LPARAM))SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)pWindowHookShellCode);
+
+	if (GetLastError() != ERROR_SUCCESS)
+		throw std::exception("Can not set window process functtion.");
+}
+
 std::string XmlWindow::GetTag()
 {
 	if (hWnd == NULL)
@@ -298,6 +417,7 @@ bool XmlWindow::SetAttributeValue(const std::string& key, const std::string& val
 		return SendMessage(hWnd, WM_GET_ATTRIBUTE_VALUE, (WPARAM)&key, (LPARAM)&value);
 	else
 		pInfo->setter(hWnd, value);
+
 	return true;
 }
 
@@ -329,7 +449,46 @@ std::string XmlWindow::CheckAttributeValue(const std::string& key, const std::st
 	return std::string();
 }
 
-XmlWindow MakeXmlWindow(const std::string& tag)
+XmlWindow::~XmlWindow()
+{
+	Close();
+	if (pWindowHookShellCode != NULL)
+		VirtualFree((void*)pWindowHookShellCode, 0, MEM_RELEASE);
+	ResetObjectt();
+}
+
+XmlWindow::XmlWindow(XmlWindow&& other) noexcept
+{
+	*this = static_cast<XmlWindow&&>(other);
+}
+
+XmlWindow& XmlWindow::operator=(XmlWindow&& other) noexcept
+{
+	if (this == &other)
+		return *this;
+
+	this->~XmlWindow();
+
+	hWnd = other.hWnd;
+	pParent = other.pParent;
+	pOldWndProc = other.pOldWndProc;
+	pWindowHookShellCode = other.pWindowHookShellCode;
+
+	//Disabble window to pause window process function calling from system.
+	EnableWindow(hWnd, FALSE);
+
+	//Change this ptr in hook.
+	ChangeThisPtrForWindowHook(pWindowHookShellCode, *this);
+
+	//Renable window.
+	EnableWindow(hWnd, TRUE);
+
+	other.ResetObjectt();
+
+	return *this;
+}
+
+XmlWindow MakeXmlWindow(const std::string& tag, XmlWindow* pParent)
 {
 #if defined(UNICODE) || defined(_UNICODE)
 	std::wstring className = Str2WStr(tag);
@@ -343,5 +502,5 @@ XmlWindow MakeXmlWindow(const std::string& tag)
 								NULL, NULL, NULL, NULL);
 #endif
 
-	return XmlWindow(hWnd);
+	return XmlWindow(hWnd, pParent);
 }

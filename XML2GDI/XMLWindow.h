@@ -4,17 +4,28 @@
 #include <Windows.h>
 #include "IXMLElement.h"
 
+
+
 //可XML搞作的GDI窗口对象
 class XmlWindow : public IXmlElement
 {
 	HWND hWnd;
+	XmlWindow* pParent;
+	LRESULT (CALLBACK *pOldWndProc)(HWND hWnd, UINT32 msgId, WPARAM wParam, LPARAM lParam);
+	const unsigned char* pWindowHookShellCode;
 
 	XmlWindow(const XmlWindow&) = delete;
 	XmlWindow& operator = (const XmlWindow&) = delete;
 
+	friend const unsigned char* GenWindowHook(XmlWindow& _this);
+
+	LRESULT XmlWindowProc(HWND hWnd, UINT32 msgId, WPARAM wParam, LPARAM lParam);
+
+	void ResetObjectt();
+
 public:
-	XmlWindow() : hWnd(NULL) {}
-	XmlWindow(HWND _hWnd) : hWnd(_hWnd) {}
+	XmlWindow() : hWnd(NULL), pParent(NULL), pOldWndProc(NULL), pWindowHookShellCode(NULL) {}
+	XmlWindow(HWND _hWnd, XmlWindow* _pParent);
 
 	virtual std::string GetTag() override;
 
@@ -32,24 +43,17 @@ public:
 	virtual std::string CheckAttributeValue(const std::string& key, const std::string& value) override;
 
 	HWND GetHandle() { return hWnd; }
+	XmlWindow* GetParent() { return pParent; }
 	void SetHandle(HWND _hWnd) { hWnd = _hWnd; }
-	void Close() { DestroyWindow(hWnd); }
+	void Close() { if (hWnd != NULL) DestroyWindow(hWnd); }
 	void Show() { ShowWindow(hWnd, SW_SHOW); }
 	void Hide() { ShowWindow(hWnd, SW_HIDE); }
 
-	virtual ~XmlWindow() { Close(); }
+	virtual ~XmlWindow();
 
-	XmlWindow(XmlWindow&& other) noexcept
-	{
-		*this = static_cast<XmlWindow&&>(other);
-	}
-	XmlWindow& operator = (XmlWindow&& other) noexcept
-	{
-		Close();
-		hWnd = other.hWnd;
-		other.hWnd = NULL;
-		return *this;
-	}
+	XmlWindow(XmlWindow&& other) noexcept;
+
+	XmlWindow& operator = (XmlWindow&& other) noexcept;
 };
 
 //非内置属性，XMLWindow会通过如下的消息交给消息处理函数处理
@@ -57,23 +61,23 @@ public:
 
 //wParam = std::string* key
 //return bool (is key exist)
-#define WM_IS_ATTRIBUTE_EXIST WM_USER + 0x300
+#define WM_IS_ATTRIBUTE_EXIST (WM_USER + 0x300)
 //wParam = std::string* key
 //lParam = std::string* value
 //return bool (value is getted.)
 //write value to std::string pointed by lParam.
-#define WM_GET_ATTRIBUTE_VALUE WM_USER + 0x301
+#define WM_GET_ATTRIBUTE_VALUE (WM_USER + 0x301)
 //wParam = std::string* key
 //lParam = std::string* value
 //return bool (value is setted.)
-#define WM_SET_ATTRIBUTE_VALUE WM_USER + 0x302
+#define WM_SET_ATTRIBUTE_VALUE (WM_USER + 0x302)
 //wParam = EnumAttributeAndValueFunc func
 //no return
 //please run this function for all atrributes and values.
-#define WM_LIST_ATTRIBUTE_AND_VALUE WM_USER + 0x303
-#define WM_CHECK_ATTRIBUTE_VALUE WM_USER+ 0x304
+#define WM_LIST_ATTRIBUTE_AND_VALUE (WM_USER + 0x303)
+#define WM_CHECK_ATTRIBUTE_VALUE (WM_USER + 0x304)
 
-XmlWindow MakeXmlWindow(const std::string& tag);
+XmlWindow MakeXmlWindow(const std::string& tag, XmlWindow* pParent = NULL);
 
 #endif // !XML_WINDOWD_H
 
