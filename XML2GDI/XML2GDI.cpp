@@ -71,7 +71,50 @@ std::vector<XmlWindow> Xml2Gdi::FromXml(std::string xmlContent)
     return {};
 }
 
+static void AttributeLister(const std::string& key, const std::string& value, void* param)
+{
+    tinyxml2::XMLElement* pElement = (tinyxml2::XMLElement*)param;
+    pElement->SetAttribute(key.c_str(), value.c_str());
+};
+
+static void ListSubWindow(HWND hWnd, tinyxml2::XMLElement* pElement, XmlWindow& window)
+{
+    //write sub element.
+    HWND child = GetWindow(hWnd, GW_CHILD);
+
+    while (child != NULL) 
+    {
+        XmlWindow subWindow(child, &window);
+
+        tinyxml2::XMLElement* pSubElement = pElement->InsertNewChildElement(subWindow.GetTag().c_str());
+
+        ListSubWindow(child, pSubElement, window);
+
+        subWindow.ListAttributheAndValue(AttributeLister, pSubElement);
+
+        child = GetWindow(child, GW_HWNDNEXT);  // 下一个兄弟，不是孙窗口
+    }
+}
+
 std::string Xml2Gdi::ToXml(HWND hWnd)
 {
-	return std::string();
+    //write xml document.
+    tinyxml2::XMLDocument document;
+
+    tinyxml2::XMLPrinter printer;
+
+    XmlWindow window(hWnd, NULL);
+
+    //write root element.
+    tinyxml2::XMLElement* pElement = document.NewElement(window.GetTag().c_str());
+
+    document.InsertEndChild(pElement);
+
+    ListSubWindow(hWnd, pElement, window);
+
+    document.Print(&printer);
+
+    document.SaveFile("a.xml");
+
+    return printer.CStr();
 }

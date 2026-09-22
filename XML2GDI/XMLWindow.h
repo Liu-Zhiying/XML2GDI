@@ -4,8 +4,6 @@
 #include <Windows.h>
 #include "IXMLElement.h"
 
-
-
 //可XML搞作的GDI窗口对象
 class XmlWindow : public IXmlElement
 {
@@ -34,7 +32,7 @@ public:
 	//如果attribute不存在则创建
 	virtual bool SetAttributeValue(const std::string& key, const std::string& value) override;
 
-	virtual void ListAttributheAndValue(EnumAttributeAndValueFunc func) override;
+	virtual void ListAttributheAndValue(EnumAttributeAndValueFunc func, void* param) override;
 
 	//判断某个attribute是否存在
 	virtual bool IsAttributeExist(const std::string& key) override;

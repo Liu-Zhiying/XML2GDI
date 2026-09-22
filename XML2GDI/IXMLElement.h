@@ -6,7 +6,7 @@
 class IXmlElement
 {
 public:
-	typedef void (*EnumAttributeAndValueFunc)(const std::string& key, const std::string& value);
+	typedef void (*EnumAttributeAndValueFunc)(const std::string& key, const std::string& value, void* param);
 
 	virtual std::string GetTag() = 0;
 
@@ -15,7 +15,7 @@ public:
 	//如果attribute不存在则创建
 	virtual bool SetAttributeValue(const std::string& key, const std::string& value) = 0;
 
-	virtual void ListAttributheAndValue(EnumAttributeAndValueFunc func) = 0;
+	virtual void ListAttributheAndValue(EnumAttributeAndValueFunc func, void* param) = 0;
 
 	//判断某个attribute是否存在
 	virtual bool IsAttributeExist(const std::string& key) = 0;

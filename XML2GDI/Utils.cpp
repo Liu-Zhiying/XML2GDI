@@ -1,10 +1,23 @@
 #include "Utils.h"
 #include <codecvt>
+#include <Windows.h>
 
 std::string WStr2Str(const std::wstring& wstr)
 {
-    static std::wstring_convert<std::codecvt_utf16<wchar_t>> myconv;
-    return myconv.to_bytes(wstr);
+    UINT codepage = CP_UTF8;
+
+    if (wstr.empty()) return {};
+
+    int len = WideCharToMultiByte(codepage, 0,
+        wstr.data(), (int)wstr.size(),
+        nullptr, 0, nullptr, nullptr);
+    if (len <= 0) return {};   // 转换失败，可用 GetLastError() 查原因
+
+    std::string out(len, '\0');
+    WideCharToMultiByte(codepage, 0,
+        wstr.data(), (int)wstr.size(),
+        &out[0], len, nullptr, nullptr);
+    return out;
 }
 
 std::wstring Str2WStr(const std::string& str)

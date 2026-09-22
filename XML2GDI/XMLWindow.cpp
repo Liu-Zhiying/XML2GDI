@@ -295,8 +295,11 @@ std::string GetExStyleAttribute(HWND hWnd)
 	}
 
 	//°Ñ½áÎ²µÄ" | "É¾³ý
-	for (int cnt = 0; cnt < 3; ++cnt)
-		styleString.pop_back();
+	if (styleString.length() > 3)
+	{
+		for (int cnt = 0; cnt < 3; ++cnt)
+			styleString.pop_back();
+	}
 
 	return styleString;
 }
@@ -362,7 +365,7 @@ XmlWindow::XmlWindow(HWND _hWnd, XmlWindow* _pParent) : hWnd(_hWnd), pParent(_pP
 	pOldWndProc = (LRESULT(CALLBACK *)(HWND, UINT32, WPARAM, LPARAM))SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)pWindowHookShellCode);
 
 	if (GetLastError() != ERROR_SUCCESS)
-		throw std::exception("Can not set window process functtion.");
+		printf("Can not set window process functtion.\n");
 }
 
 std::string XmlWindow::GetTag()
@@ -383,6 +386,9 @@ std::string XmlWindow::GetTag()
 	result.resize(512);
 	result.resize(GetClassNameA(hWnd, &result[0], 512));
 #endif // defined(UNICODE) || defined(_UNICODE)
+
+	if (result.length() == 0)
+		result = "IUnkonwn";
 
 	return result;
 }
@@ -421,12 +427,13 @@ bool XmlWindow::SetAttributeValue(const std::string& key, const std::string& val
 	return true;
 }
 
-void XmlWindow::ListAttributheAndValue(EnumAttributeAndValueFunc func)
+void XmlWindow::ListAttributheAndValue(EnumAttributeAndValueFunc func, void* param) 
 {
 	for (auto& info : internalAttributes)
-		func(info.key, info.getter(hWnd));
+		func(info.key, info.getter(hWnd), param);
 
-	SendMessage(hWnd, WM_LIST_ATTRIBUTE_AND_VALUE, (WPARAM)func, 0);
+	if (pOldWndProc != NULL)
+		SendMessage(hWnd, WM_LIST_ATTRIBUTE_AND_VALUE, (WPARAM)func, 0);
 }
 
 bool XmlWindow::IsAttributeExist(const std::string& key)
