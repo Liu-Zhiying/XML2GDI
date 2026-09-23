@@ -49,6 +49,8 @@ public:
 
 	virtual ~XmlWindow();
 
+	void CloseObject();
+
 	XmlWindow(XmlWindow&& other) noexcept;
 
 	XmlWindow& operator = (XmlWindow&& other) noexcept;

@@ -14,22 +14,22 @@ bool ListAllElements(std::vector<XmlWindow>& xmlWindows, tinyxml2::XMLElement* e
             }
         };
 
-    //Make window,
+    //Make window.
     XmlWindow window = MakeXmlWindow(element->Name(), pParentWindow);
     if (window.GetHandle() == NULL)
         return false;
 
-    //list and set attributes to window,
+    //list and set attributes to window.
     listAttributeAndSet(window, *element);
 
-    //If the window is a child window, make it visible,
+    //If the window is a child window, make it visible.
     if (pParentWindow != NULL)
     {
         SetWindowLong(window.GetHandle(), GWL_STYLE, GetWindowLong(window.GetHandle(), GWL_STYLE) | WS_CHILD);
         SetParent(window.GetHandle(), pParentWindow->GetHandle());
     }
 
-    //Make child window,
+    //Make child window.
     tinyxml2::XMLElement* subElement = element->FirstChildElement();
 
     while (subElement != NULL)

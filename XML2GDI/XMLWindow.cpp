@@ -458,6 +458,11 @@ std::string XmlWindow::CheckAttributeValue(const std::string& key, const std::st
 
 XmlWindow::~XmlWindow()
 {
+	CloseObject();
+}
+
+void XmlWindow::CloseObject()
+{
 	Close();
 	if (pWindowHookShellCode != NULL)
 		VirtualFree((void*)pWindowHookShellCode, 0, MEM_RELEASE);
@@ -466,7 +471,7 @@ XmlWindow::~XmlWindow()
 
 XmlWindow::XmlWindow(XmlWindow&& other) noexcept
 {
-	*this = static_cast<XmlWindow&&>(other);
+	*this = dynamic_cast<XmlWindow&&>(other);
 }
 
 XmlWindow& XmlWindow::operator=(XmlWindow&& other) noexcept
@@ -474,7 +479,7 @@ XmlWindow& XmlWindow::operator=(XmlWindow&& other) noexcept
 	if (this == &other)
 		return *this;
 
-	this->~XmlWindow();
+	CloseObject();
 
 	hWnd = other.hWnd;
 	pParent = other.pParent;
