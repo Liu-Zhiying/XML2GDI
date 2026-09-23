@@ -114,7 +114,5 @@ std::string Xml2Gdi::ToXml(HWND hWnd)
 
     document.Print(&printer);
 
-    document.SaveFile("a.xml");
-
     return printer.CStr();
 }
