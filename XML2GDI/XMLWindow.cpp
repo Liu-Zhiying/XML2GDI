@@ -33,7 +33,7 @@ const unsigned char* GenWindowHook(XmlWindow& _this)
 		void** pFunc = (void**)(shellCode + 0x12);
 
 		*pThis = &_this;
-        LRESULT (XmlWindow::*_pFunc)(HWND hWnd, UINT32 msgId, WPARAM wParam, LPARAM lParam) = &XmlWindow::XmlWindowProc;
+		LRESULT(XmlWindow:: * _pFunc)(HWND hWnd, UINT32 msgId, WPARAM wParam, LPARAM lParam) = &XmlWindow::XmlWindowProc;
 		*pFunc = *reinterpret_cast<void**>(&_pFunc);
 
 		return shellCode;
@@ -116,7 +116,7 @@ void SetTextAttribute(HWND hWnd, const std::string& value)
 #else
 	SetWindowTextA(hWnd, value.c_str());
 #endif // defined(UNICODE) || defined(_UNICODE)
-	
+
 }
 
 std::string GetRectAttribute(HWND hWnd)
@@ -169,8 +169,31 @@ struct WindowStyleAndValue
 	{ "WS_GROUP", 0x00020000L },
 	{ "WS_TABSTOP", 0x00010000L },
 	{ "WS_MINIMIZEBOX", 0x00020000L },
+	{ "WS_MAXIMIZEBOX", 0x00010000L },
+	{ "WS_OVERLAPPEDWINDOW", 0x000CF0000L },
+	{ "WS_POPUPWINDOW", 0x80880000L },
+	{ "WS_CAPTION", 0x00C00000L },
+	{ "WS_OVERLAPPED", 0x00000000L },
+	{ "WS_POPUP ", 0x80000000L },
+	{ "WS_CHILD", 0x40000000L },
+	{ "WS_MINIMIZE", 0x20000000L },
+	{ "WS_VISIBLE", 0x10000000L },
+	{ "WS_DISABLED", 0x08000000L },
+	{ "WS_CLIPSIBLINGS", 0x04000000L },
+	{ "WS_CLIPCHILDREN", 0x02000000L },
+	{ "WS_MAXIMIZE", 0x01000000L },
+	{ "WS_BORDER", 0x00800000L },
+	{ "WS_DLGFRAME", 0x00400000L },
+	{ "WS_VSCROLL", 0x00200000L },
+	{ "WS_HSCROLL", 0x00100000L },
+	{ "WS_SYSMENU" ,0x00080000L },
+	{ "WS_THICKFRAME", 0x00040000L },
+	{ "WS_GROUP", 0x00020000L },
+	{ "WS_TABSTOP", 0x00010000L },
+	{ "WS_MINIMIZEBOX", 0x00020000L },
 	{ "WS_MAXIMIZEBOX", 0x00010000L }
 };
+
 WindowStyleAndValue exStyleInfos[] = {
 	{ "WS_EX_OVERLAPPEDWINDOW", 0x00000300L },
 	{ "WS_EX_PALETTEWINDOW", 0x00000188L },
@@ -203,37 +226,267 @@ WindowStyleAndValue exStyleInfos[] = {
 	{ "WS_EX_NOACTIVATE", 0x08000000L }
 };
 
+WindowStyleAndValue buttonStyleInfos[] =
+{
+	{ "BS_AUTOCHECKBOX", 0x0003 },
+	{ "BS_3STATE", 0x0005 },
+	{ "BS_AUTO3STATE", 0x0006 },
+	{ "BS_GROUPBOX", 0x0007 },
+	{ "BS_AUTORADIOBUTTON", 0x0009 },
+	{ "BS_PUSHBOX", 0x000A },
+	{ "BS_OWNERDRAW", 0x000B },
+	{ "BS_DEFPUSHBUTTON", 0x0001 },
+	{ "BS_CHECKBOX", 0x0002 },
+	{ "BS_RADIOBUTTON", 0x0004 },
+	{ "BS_USERBUTTON", 0x0008 },
+	{ "BS_PUSHBUTTON", 0x0000 }
+};
+
+WindowStyleAndValue editStyleInfos[] =
+{
+	{ "ES_LEFT", 0x0000 },
+	{ "ES_CENTER", 0x0001 },
+	{ "ES_RIGHT", 0x0002 },
+	{ "ES_MULTILINE", 0x0004 },
+	{ "ES_UPPERCASE", 0x0008 },
+	{ "ES_LOWERCASE", 0x0010 },
+	{ "ES_PASSWORD", 0x0020 },
+	{ "ES_AUTOVSCROLL", 0x0040 },
+	{ "ES_AUTOHSCROLL", 0x0080 },
+	{ "ES_NOHIDESEL", 0x0100 },
+	{ "ES_OEMCONVERT", 0x0400 },
+	{ "ES_READONLY", 0x0800 },
+	{ "ES_WANTRETURN", 0x1000 },
+	{ "ES_NUMBER", 0x2000 },
+	{ "ES_SAVESEL", 0x8000 },
+};
+
+WindowStyleAndValue staticStyleInfos[] =
+{
+	{ "SS_RIGHT", 0x0002 },
+	{ "SS_ICON", 0x0003 },
+	{ "SS_GRAYRECT", 0x0005 },
+	{ "SS_BLACKFRAME", 0x0007 },
+	{ "SS_WHITEFRAME", 0x0009 },
+	{ "SS_USERITEM", 0x000A },
+	{ "SS_ETCHEDVERT", 0x0011 },
+	{ "SS_ETCHEDFRAME", 0x0012 },
+	{ "SS_TYPEMASK", 0x001F },
+	{ "SS_BITMAP", 0x000E },
+	{ "SS_ENHMETAFILE", 0x000F },
+	{ "SS_SIMPLE", 0x000B },
+	{ "SS_OWNERDRAW", 0x000D },
+	{ "SS_CENTER", 0x0001 },
+	{ "SS_BLACKRECT", 0x0004 },
+	{ "SS_WHITERECT", 0x0006 },
+	{ "SS_GRAYFRAME", 0x0008 },
+	{ "SS_LEFTNOWORDWRAP", 0x000C },
+	{ "SS_ETCHEDHORZ", 0x0010 },
+	{ "SS_NOPREFIX", 0x0080 },
+	{ "SS_CENTERIMAGE", 0x0200 },
+	{ "SS_RIGHTJUST", 0x0400 },
+	{ "SS_REALSIZEIMAGE", 0x0800 },
+	{ "SS_SUNKEN", 0x1000 },
+	{ "SS_ENDELLIPSIS", 0x4000 },
+	{ "SS_PATHELLIPSIS", 0x8000 },
+	{ "SS_WORDELLIPSIS", 0xC000 },
+	{ "SS_NOTIFY", 0x0100 },
+	{ "SS_LEFT", 0x0000 },
+};
+
+WindowStyleAndValue listBoxStyleInfos[] =
+{
+	{ "LBS_NOTIFY", 0x0001 },
+	{ "LBS_SORT", 0x0002 },
+	{ "LBS_NOREDRAW", 0x0004 },
+	{ "LBS_MULTIPLESEL", 0x0008 },
+	{ "LBS_OWNERDRAWFIXED", 0x0010 },
+	{ "LBS_OWNERDRAWVARIABLE", 0x0020 },
+	{ "LBS_HASSTRINGS", 0x0040 },
+	{ "LBS_USETABSTOPS", 0x0080 },
+	{ "LBS_NOINTEGRALHEIGHT", 0x0100 },
+	{ "LBS_MULTICOLUMN", 0x0200 },
+	{ "LBS_WANTKEYBOARDINPUT", 0x0400 },
+	{ "LBS_EXTENDEDSEL", 0x0800 },
+	{ "LBS_DISABLENOSCROLL", 0x1000 },
+	{ "LBS_NODATA", 0x2000 },
+	{ "LBS_NOSEL", 0x4000 },
+	{ "LBS_COMBOBOX", 0x8000 },
+};
+
+WindowStyleAndValue comboBoxStyleInfos[] =
+{
+	{ "CBS_DROPDOWNLIST", 0x0003 },
+	{ "CBS_SIMPLE", 0x0001 },
+	{ "CBS_DROPDOWN", 0x0002 },
+	{ "LBS_OWNERDRAWFIXED", 0x0010 },
+	{ "LBS_OWNERDRAWVARIABLE", 0x0020 },
+	{ "CBS_AUTOHSCROLL", 0x0040 },
+	{ "CBS_OEMCONVERT", 0x0080 },
+	{ "CBS_SORT", 0x0100 },
+	{ "CBS_HASSTRINGS", 0x0200 },
+	{ "CBS_NOINTEGRALHEIGHT", 0x0400 },
+	{ "CBS_DISABLENOSCROLL", 0x0800 },
+	{ "CBS_UPPERCASE", 0x2000 },
+	{ "CBS_LOWERCASE", 0x4000 },
+};
+
+WindowStyleAndValue scrollBarStyleInfos[] =
+{
+	{ "SBS_VERT", 0x0001 },
+	{ "SBS_TOPALIGN", 0x0002 },
+	{ "SBS_LEFTALIGN", 0x0002 },
+	{ "SBS_BOTTOMALIGN", 0x0004 },
+	{ "SBS_RIGHTALIGN", 0x0004 },
+	{ "SBS_SIZEBOX", 0x0008 },
+	{ "SBS_SIZEGRIP", 0x0010 },
+	{ "SBS_HORZ", 0x0000 },
+};
+
+
 struct WindowStyleRenam
 {
 	const char* keyName;
 	const char* replaceName;
 } styleRenames[] = {
-	{ "WS_TILED", "WS_OVERLAPPED"},
-	{ "WS_ICONIC", "WS_MINIMIZE"},
+	{ "WS_TILED", "WS_OVERLAPPED" },
+	{ "WS_ICONIC", "WS_MINIMIZE" },
 	{ "WS_SIZEBOX", " WS_THICKFRAME" },
-	{ "WS_TILEDWINDOW", "WS_OVERLAPPEDWINDOW"},
+	{ "WS_TILEDWINDOW", "WS_OVERLAPPEDWINDOW" },
 	{ "WS_CHILDWINDOW", "WS_CHILD" }
 };
+
+std::string GetWindowClassName(HWND hWnd)
+{
+	CHAR buffer[512] = {};
+	GetClassNameA(hWnd, buffer, sizeof buffer / sizeof buffer[0]);
+	return buffer;
+}
 
 std::string GetStyleAttribute(HWND hWnd)
 {
 	std::string styleString = {};
 	DWORD styleCode = GetWindowLong(hWnd, GWL_STYLE);
 
-	for (size_t idx = 0; idx < ARRAY_SIZE(styleInfos) && styleCode; ++idx)
+	std::string className = GetWindowClassName(hWnd);
+	for (auto& c : className) c = tolower(c);
+
+	if (className == "edit")
 	{
-		DWORD styleTestCode = styleCode & styleInfos[idx].value;
-		if (styleTestCode == styleInfos[idx].value)
+		for (auto& si : editStyleInfos)
+		{
+			DWORD styleTestCode = styleCode & si.value;
+			if (styleTestCode == si.value)
+			{
+				//去掉测试出来的标志位
+				styleCode &= ~si.value;
+
+				//添加对应的样式字符串
+				styleString += si.styleName;
+				styleString += " | ";
+			}
+		}
+	}
+
+	if (className == "button")
+	{
+		for (auto& si : buttonStyleInfos)
+		{
+			DWORD styleTestCode = styleCode & si.value;
+			if (styleTestCode == si.value)
+			{
+				//去掉测试出来的标志位
+				styleCode &= ~si.value;
+
+				//添加对应的样式字符串
+				styleString += si.styleName;
+				styleString += " | ";
+			}
+		}
+	}
+
+	if (className == "static")
+	{
+		for (auto& si : staticStyleInfos)
+		{
+			DWORD styleTestCode = styleCode & si.value;
+			if (styleTestCode == si.value)
+			{
+				//去掉测试出来的标志位
+				styleCode &= ~si.value;
+
+				//添加对应的样式字符串
+				styleString += si.styleName;
+				styleString += " | ";
+			}
+		}
+	}
+
+	if (className == "listbox")
+	{
+		for (auto& si : listBoxStyleInfos)
+		{
+			DWORD styleTestCode = styleCode & si.value;
+			if (styleTestCode == si.value)
+			{
+				//去掉测试出来的标志位
+				styleCode &= ~si.value;
+
+				//添加对应的样式字符串
+				styleString += si.styleName;
+				styleString += " | ";
+			}
+		}
+	}
+
+	if (className == "combobox")
+	{
+		for (auto& si : comboBoxStyleInfos)
+		{
+			DWORD styleTestCode = styleCode & si.value;
+			if (styleTestCode == si.value)
+			{
+				//去掉测试出来的标志位
+				styleCode &= ~si.value;
+
+				//添加对应的样式字符串
+				styleString += si.styleName;
+				styleString += " | ";
+			}
+		}
+	}
+
+	if (className == "scrollbar")
+	{
+		for (auto& si : scrollBarStyleInfos)
+		{
+			DWORD styleTestCode = styleCode & si.value;
+			if (styleTestCode == si.value)
+			{
+				//去掉测试出来的标志位
+				styleCode &= ~si.value;
+
+				//添加对应的样式字符串
+				styleString += si.styleName;
+				styleString += " | ";
+			}
+		}
+	}
+
+	for (auto& si : styleInfos)
+	{
+		DWORD styleTestCode = styleCode & si.value;
+		if (styleTestCode == si.value)
 		{
 			//去掉测试出来的标志位
-			styleCode &= ~styleInfos[idx].value;
+			styleCode &= ~si.value;
 
 			//添加对应的样式字符串
-			styleString += styleInfos[idx].styleName;
+			styleString += si.styleName;
 			styleString += " | ";
 		}
 	}
-	
+
 	//把结尾的" | "删除
 	if (styleString.length() >= 3)
 	{
@@ -250,17 +503,92 @@ void SetStyleAttribute(HWND hWnd, const std::string& value)
 
 	std::vector<std::string> words = SplitStringByChar(value, '|');
 
+	std::string className = GetWindowClassName(hWnd);
+	for (auto& c : className) c = tolower(c);
+
 	for (auto& word : words)
 	{
 		std::string word_trimed = TrimStr(word);
 
-		WindowStyleRenam* pRename = std::find_if(styleRenames, 
-												 styleRenames + ARRAY_SIZE(styleRenames), 
-												 [&word_trimed](WindowStyleRenam& rename) -> bool {
-													 return word_trimed == rename.keyName; });
+		WindowStyleRenam* pRename = std::find_if(styleRenames,
+			styleRenames + ARRAY_SIZE(styleRenames),
+			[&word_trimed](WindowStyleRenam& rename) -> bool {
+				return word_trimed == rename.keyName; });
 
 		if (pRename != styleRenames + ARRAY_SIZE(styleRenames))
 			word_trimed = pRename->replaceName;
+
+		if (className == "edit")
+		{
+			WindowStyleAndValue* pInfo = std::find_if(editStyleInfos,
+				editStyleInfos + ARRAY_SIZE(editStyleInfos),
+				[&word_trimed](WindowStyleAndValue& info) -> bool { return info.styleName == word_trimed; });
+
+			if (pInfo != editStyleInfos + ARRAY_SIZE(editStyleInfos))
+			{
+				styleCode |= pInfo->value;
+			}
+		}
+
+		if (className == "button")
+		{
+			WindowStyleAndValue* pInfo = std::find_if(buttonStyleInfos,
+				buttonStyleInfos + ARRAY_SIZE(buttonStyleInfos),
+				[&word_trimed](WindowStyleAndValue& info) -> bool { return info.styleName == word_trimed; });
+
+			if (pInfo != buttonStyleInfos + ARRAY_SIZE(buttonStyleInfos))
+			{
+				styleCode |= pInfo->value;
+			}
+		}
+
+		if (className == "static")
+		{
+			WindowStyleAndValue* pInfo = std::find_if(staticStyleInfos,
+				staticStyleInfos + ARRAY_SIZE(staticStyleInfos),
+				[&word_trimed](WindowStyleAndValue& info) -> bool { return info.styleName == word_trimed; });
+
+			if (pInfo != staticStyleInfos + ARRAY_SIZE(staticStyleInfos))
+			{
+				styleCode |= pInfo->value;
+			}
+		}
+
+		if (className == "listbox")
+		{
+			WindowStyleAndValue* pInfo = std::find_if(listBoxStyleInfos,
+				listBoxStyleInfos + ARRAY_SIZE(listBoxStyleInfos),
+				[&word_trimed](WindowStyleAndValue& info) -> bool { return info.styleName == word_trimed; });
+
+			if (pInfo != listBoxStyleInfos + ARRAY_SIZE(listBoxStyleInfos))
+			{
+				styleCode |= pInfo->value;
+			}
+		}
+
+		if (className == "combobox")
+		{
+			WindowStyleAndValue* pInfo = std::find_if(comboBoxStyleInfos,
+				comboBoxStyleInfos + ARRAY_SIZE(comboBoxStyleInfos),
+				[&word_trimed](WindowStyleAndValue& info) -> bool { return info.styleName == word_trimed; });
+
+			if (pInfo != comboBoxStyleInfos + ARRAY_SIZE(comboBoxStyleInfos))
+			{
+				styleCode |= pInfo->value;
+			}
+		}
+
+		if (className == "scrollbar")
+		{
+			WindowStyleAndValue* pInfo = std::find_if(scrollBarStyleInfos,
+				scrollBarStyleInfos + ARRAY_SIZE(scrollBarStyleInfos),
+				[&word_trimed](WindowStyleAndValue& info) -> bool { return info.styleName == word_trimed; });
+
+			if (pInfo != scrollBarStyleInfos + ARRAY_SIZE(scrollBarStyleInfos))
+			{
+				styleCode |= pInfo->value;
+			}
+		}
 
 		WindowStyleAndValue* pInfo = std::find_if(styleInfos,
 			styleInfos + ARRAY_SIZE(styleInfos),
@@ -362,7 +690,7 @@ XmlWindow::XmlWindow(HWND _hWnd, XmlWindow* _pParent) : hWnd(_hWnd), pParent(_pP
 		throw std::exception("Can not generate window hook.");
 
 	//Set window processs function to the hook and get old function.
-	pOldWndProc = (LRESULT(CALLBACK *)(HWND, UINT32, WPARAM, LPARAM))SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)pWindowHookShellCode);
+	pOldWndProc = (LRESULT(CALLBACK*)(HWND, UINT32, WPARAM, LPARAM))SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)pWindowHookShellCode);
 
 	if (GetLastError() != ERROR_SUCCESS)
 		printf("Can not set window process functtion.\n");
@@ -427,7 +755,7 @@ bool XmlWindow::SetAttributeValue(const std::string& key, const std::string& val
 	return true;
 }
 
-void XmlWindow::ListAttributheAndValue(EnumAttributeAndValueFunc func, void* param) 
+void XmlWindow::ListAttributheAndValue(EnumAttributeAndValueFunc func, void* param)
 {
 	for (auto& info : internalAttributes)
 		func(info.key, info.getter(hWnd), param);
@@ -456,6 +784,20 @@ std::string XmlWindow::CheckAttributeValue(const std::string& key, const std::st
 	return std::string();
 }
 
+void XmlWindow::Close()
+{
+	if (hWnd != NULL)
+	{
+		DestroyWindow(hWnd);
+		hWnd = NULL;
+	}
+	if (pWindowHookShellCode != NULL)
+	{
+		VirtualFree((void*)pWindowHookShellCode, 0, MEM_RELEASE);
+		pWindowHookShellCode = NULL;
+	}
+}
+
 XmlWindow::~XmlWindow()
 {
 	CloseObject();
@@ -464,8 +806,21 @@ XmlWindow::~XmlWindow()
 void XmlWindow::CloseObject()
 {
 	Close();
+	ResetObjectt();
+}
+
+void XmlWindow::FreeResource()
+{
 	if (pWindowHookShellCode != NULL)
+	{
+		if (pOldWndProc != NULL)
+		{
+			SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)pOldWndProc);
+			pOldWndProc = NULL;
+		}
 		VirtualFree((void*)pWindowHookShellCode, 0, MEM_RELEASE);
+		pWindowHookShellCode = NULL;
+	}
 	ResetObjectt();
 }
 
@@ -506,12 +861,12 @@ XmlWindow MakeXmlWindow(const std::string& tag, XmlWindow* pParent)
 	std::wstring className = Str2WStr(tag);
 
 	HWND hWnd = CreateWindowEx(0, className.c_str(), L"", 0,
-								CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 
-								NULL, NULL, NULL, NULL);
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		NULL, NULL, NULL, NULL);
 #else
 	HWND hWnd = CreateWindowEx(0, tag.c_str(), "", 0,
-								CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-								NULL, NULL, NULL, NULL);
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		NULL, NULL, NULL, NULL);
 #endif
 
 	return XmlWindow(hWnd, pParent);

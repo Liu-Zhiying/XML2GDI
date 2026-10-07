@@ -43,13 +43,15 @@ public:
 	HWND GetHandle() { return hWnd; }
 	XmlWindow* GetParent() { return pParent; }
 	void SetHandle(HWND _hWnd) { hWnd = _hWnd; }
-	void Close() { if (hWnd != NULL) DestroyWindow(hWnd); }
+	void Close();
 	void Show() { ShowWindow(hWnd, SW_SHOW); }
 	void Hide() { ShowWindow(hWnd, SW_HIDE); }
 
 	virtual ~XmlWindow();
 
 	void CloseObject();
+
+	void FreeResource();
 
 	XmlWindow(XmlWindow&& other) noexcept;
 

@@ -92,6 +92,9 @@ static void ListSubWindow(HWND hWnd, tinyxml2::XMLElement* pElement, XmlWindow& 
 
         subWindow.ListAttributheAndValue(AttributeLister, pSubElement);
 
+        //Free resource for list, avoid closing the window.
+        subWindow.FreeResource();
+
         child = GetWindow(child, GW_HWNDNEXT);  // 下一个兄弟，不是孙窗口
     }
 }
@@ -111,6 +114,9 @@ std::string Xml2Gdi::ToXml(HWND hWnd)
     document.InsertEndChild(pElement);
 
     ListSubWindow(hWnd, pElement, window);
+
+    //Free resource for list, avoid closing the window.
+    window.FreeResource();
 
     document.Print(&printer);
 
